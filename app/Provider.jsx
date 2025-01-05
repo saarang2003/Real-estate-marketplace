@@ -1,12 +1,13 @@
-import React from 'react'
-import Header from './_components/Header'
+import React from "react";
+import Header from "./_components/Header";
 
-function Provider({children}) {
+function Provider({ children }) {
   return (
     <div>
-        <Header/>
-        {children}</div>
-  )
+      <Header />
+      <div className=" flex item-center justify-center mt-32">{children}</div>
+    </div>
+  );
 }
 
-export default Provider
+export default Provider;

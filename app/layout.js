@@ -24,11 +24,22 @@ export default function RootLayout({ children }) {
     <ClerkProvider>
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* <SignedOut>
+        <SignInButton/>
+        </SignedOut>
+        <SignedIn>
+          <UserButton/>
+        </SignedIn> */}
         <Provider>
             {children}
           </Provider>
         </body>
       </html>
     </ClerkProvider>
+
+  
   );
 }
+
+
+
