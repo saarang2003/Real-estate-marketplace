@@ -1,12 +1,15 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet/dist/leaflet.css';
-
-// This is needed to fix the marker icon issue in react-leaflet
 import L from 'leaflet';
+import { supabase } from '@/utils/supabase/client'; // Ensure your supabase client is properly set up
+import { useUser } from '@clerk/nextjs';
+import { toast } from 'sonner';
+
+// Fix marker icon issue with React-Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -19,20 +22,47 @@ const Search = ({ setPosition }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const map = useMap();
   const provider = new OpenStreetMapProvider();
+  const { user } = useUser();
 
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
+      // Search for the location using the query
       const results = await provider.search({ query: searchQuery });
       if (results.length > 0) {
         const { x: lng, y: lat } = results[0];
-        const newPosition = { lat, lng };
+        const newPosition = { lat, lng }; // Use the result coordinates
         console.log('Location coordinates:', newPosition);
+
+        // Update the position on the map
         setPosition(newPosition);
         map.flyTo(newPosition, 13);
+
+        // Insert the listing into Supabase with the search data
+        const { data, error } = await supabase
+          .from('listing')
+          .insert([
+            {
+              address: searchQuery,
+              coordinates: newPosition,  // Using the correct position
+              createdBy: user?.primaryEmailAddress?.emailAddress, // Ensure `user` exists
+            },
+          ])
+          .select();
+
+        if (data) {
+          console.log('New data added:', data);
+          toast("Successfully added new location");
+        } else {
+          console.log('Error:', error);
+          toast("Server side error: " + error.message);
+        }
+      } else {
+        toast("No results found for the given location.");
       }
     } catch (error) {
       console.error('Error searching location:', error);
+      toast("Error searching location: " + error.message);
     }
   };
 
@@ -58,8 +88,7 @@ const Search = ({ setPosition }) => {
 };
 
 const MapSearch = () => {
-  const [position, setPosition] = useState({ lat: 51.505, lng: -0.09 });
-  console.log("location details " , position.lat , position.lng);
+  const [position, setPosition] = useState({ lat: 51.505, lng: -0.09 }); // Default position
 
   return (
     <div className="w-full h-[600px] relative">
@@ -80,7 +109,6 @@ const MapSearch = () => {
             Selected location<br />
             Lat: {position.lat.toFixed(4)}<br />
             Lng: {position.lng.toFixed(4)}
-        
           </Popup>
         </Marker>
       </MapContainer>

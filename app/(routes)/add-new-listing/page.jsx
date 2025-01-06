@@ -1,5 +1,5 @@
 'use client'
-import Map from '@/app/_components/Map';
+
 import MapSearch from '@/app/_components/MapSearch';
 import { MapPin } from 'lucide-react';
 

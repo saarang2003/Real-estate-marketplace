@@ -2,6 +2,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Provider from "./Provider";
 import { ClerkProvider, SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { Toaster } from "@/components/ui/sonner";
+
 
 // Load fonts from Google Fonts
 const geistSans = Geist({
@@ -32,6 +34,7 @@ export default function RootLayout({ children }) {
         </SignedIn> */}
         <Provider>
             {children}
+            <Toaster />
           </Provider>
         </body>
       </html>
