@@ -1,7 +1,7 @@
 "use client";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -13,60 +13,92 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Formik } from "formik";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { supabase } from "@/utils/supabase/client";
+import { useUser } from "@clerk/nextjs";
 
 function page() {
-  const initialState = {
-    type: "", // Default value for type
-    bedroom: "", // Default value for bedroom
-    bathroom: "", // Default value for bathroom
-    builtin: "", // Default value for built-in
-    parking: "", // Default value for parking
-    plotSize: "", // Default value for plot size
-    area: "", // Default value for area
-    sellingPrice: "", // Default value for selling price
-    hoa: "", // Default value for HOA
-    additionalNotes: "", // Default value for additional notes
+  const [listing, setListing] = useState(null); // Start with null for listing
+  const [initialValues, setInitialValues] = useState({
+    type: "",
+    bedroom: "",
+    bathroom: "",
+    builtin: "",
+    parking: "",
+    plotSize: "",
+    area: "",
+    sellingPrice: "",
+    hoa: "",
+    additionalNotes: "",
+  });
+  const params = usePathname();
+  const { user } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      verifyUser();
+    }
+  }, [user]);
+
+  const verifyUser = async () => {
+    const { data, error } = await supabase
+      .from("listing")
+      .select("*")
+      .eq("createdBy", user?.primaryEmailAddress?.emailAddress)
+      .eq("id", params.split("/")[2]);
+
+    if (data && data.length > 0) {
+      setListing(data[0]);
+      setInitialValues({
+        type: data[0]?.type || "",
+        bedroom: data[0]?.bedroom || "",
+        bathroom: data[0]?.bathroom || "",
+        builtin: data[0]?.builtin || "",
+        parking: data[0]?.parking || "",
+        plotSize: data[0]?.plotSize || "",
+        area: data[0]?.area || "",
+        sellingPrice: data[0]?.price || "",
+        hoa: data[0]?.hoa || "",
+        additionalNotes: data[0]?.description || "",
+      });
+    } else {
+      router.replace("/");
+    }
   };
 
-  const params = usePathname();
+  const onSubmitHandler = async (formValue) => {
+    const { data, error } = await supabase
+      .from("listing")
+      .update({
+        type: formValue.type,
+        propertyType: formValue.propertyType,
+        bedroom: formValue.bedroom,
+        bathroom: formValue.bathroom,
+        builtIn: formValue.builtin,
+        parking: formValue.parking,
+        plotSize: formValue.plotSize,
+        area: formValue.area,
+        price: formValue.sellingPrice,
+        hoa: formValue.hoa,
+        description: formValue.additionalNotes,
+      })
+      .eq("id", params.split("/")[2])
+      .select();
 
-  useEffect(() =>{
-    console.log(params.split('/')[2])
-  } , []);
-
-  
-  const onSubmitHandler = async(formValue) =>{
-    
-const { data, error } = await supabase
-.from('listing')
-.update({
-  type: formValue.type,
-  propertyType: formValue.propertyType,
-  bedroom: formValue.bedroom,
-  bathroom: formValue.bathroom,
-  builtIn: formValue.builtin,
-  parking: formValue.parking,
-  plotSize: formValue.plotSize,
-  area: formValue.area,
-  price: formValue.sellingPrice,
-  hoa: formValue.hoa,
-  description: formValue.additionalNotes,
-})
-.eq('id',params.split('/')[2])
-.select()
-
-    if( data){
-      console.log("data updated " , data);
-      toast('Data Updated Successfully');
-    }else{
-      console.log("data not updated" , error);
-      toast('Data Not Updated ');
+    if (data) {
+      console.log("data updated", data);
+      toast("Data Updated Successfully");
+    } else {
+      console.log("data not updated", error);
+      toast("Data Not Updated");
     }
+  };
+
+  if (!listing) {
+    return <div>Loading...</div>; // Wait until listing data is fetched
   }
- 
 
   return (
     <div className="w-full mx-auto">
@@ -75,8 +107,9 @@ const { data, error } = await supabase
           Enter more details about the listing
         </h2>
         <Formik
-          initialValues={initialState}
-          onSubmit={(values) =>{
+          initialValues={initialValues}
+          enableReinitialize={true} // Important for re-initializing values when listing is fetched
+          onSubmit={(values) => {
             console.log(values);
             onSubmitHandler(values);
           }}
@@ -227,10 +260,7 @@ const { data, error } = await supabase
                 {/* Fourth Row: Selling Price, HOA */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                   <div className="flex flex-col gap-2">
-                    <Label
-                      htmlFor="selling-price"
-                      className="text-lg text-slate-500"
-                    >
+                    <Label htmlFor="selling-price" className="text-lg text-slate-500">
                       Selling Price ($)
                     </Label>
                     <Input
@@ -263,16 +293,12 @@ const { data, error } = await supabase
                 {/* Final Row: Additional Notes */}
                 <div className="mb-6">
                   <div className="flex flex-col gap-2">
-                    <Label
-                      htmlFor="additional-notes"
-                      className="text-lg text-slate-500"
-                    >
+                    <Label htmlFor="additional-notes" className="text-lg text-slate-500">
                       Additional Notes
                     </Label>
                     <Textarea
                       placeholder="Type your message here."
                       className="w-full"
-                      type="text"
                       name="additionalNotes"
                       value={values.additionalNotes}
                       onChange={handleChange}

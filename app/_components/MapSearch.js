@@ -8,6 +8,7 @@ import L from 'leaflet';
 import { supabase } from '@/utils/supabase/client'; // Ensure your supabase client is properly set up
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 // Fix marker icon issue with React-Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -23,6 +24,16 @@ const Search = ({ setPosition }) => {
   const map = useMap();
   const provider = new OpenStreetMapProvider();
   const { user } = useUser();
+  const router = useRouter();
+
+  const flyToLocation = (position, zoom) => {
+    return new Promise(resolve => {
+      map.once('moveend', () => {
+        resolve();
+      });
+      map.flyTo(position, zoom);
+    });
+  };
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -36,7 +47,7 @@ const Search = ({ setPosition }) => {
 
         // Update the position on the map
         setPosition(newPosition);
-        map.flyTo(newPosition, 13);
+
 
         // Insert the listing into Supabase with the search data
         const { data, error } = await supabase
@@ -52,6 +63,9 @@ const Search = ({ setPosition }) => {
 
         if (data) {
           console.log('New data added:', data);
+          console.log(data);
+          await flyToLocation(newPosition, 13);
+          router.replace('/edit-listing/' +data[0].id)
           toast("Successfully added new location");
         } else {
           console.log('Error:', error);
@@ -80,7 +94,7 @@ const Search = ({ setPosition }) => {
           type="submit"
           className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          Search
+         Next
         </button>
       </form>
     </div>
