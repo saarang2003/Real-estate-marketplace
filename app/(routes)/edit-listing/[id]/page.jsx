@@ -17,24 +17,34 @@ import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { supabase } from "@/utils/supabase/client";
 import { useUser } from "@clerk/nextjs";
+import FileUpload from "../_components/FileUpload";
 
-function page() {
+
+
+
+
+function Page() {
+  const params = usePathname();
+const { user } = useUser();
+const router = useRouter();
   const [listing, setListing] = useState(null); // Start with null for listing
   const [initialValues, setInitialValues] = useState({
+    profileImage: user?.imageUrl,
+    fullName: user?.fullName,
     type: "",
-    bedroom: "",
-    bathroom: "",
-    builtin: "",
-    parking: "",
-    plotSize: "",
-    area: "",
-    sellingPrice: "",
-    hoa: "",
+    bedroom: 0,  // Default value is 0 instead of an empty string
+    bathroom: 0, // Default value is 0
+    builtin: 0,  // Default value is 0
+    parking: 0,  // Default value is 0
+    plotSize: 0, // Default value is 0
+    area: 0,     // Default value is 0
+    sellingPrice: 0,  // Default value is 0
+    hoa: 0,           // Default value is 0
     additionalNotes: "",
   });
-  const params = usePathname();
-  const { user } = useUser();
-  const router = useRouter();
+
+  const [images , setImages]  = useState([]);
+ 
 
   useEffect(() => {
     if (user) {
@@ -45,11 +55,12 @@ function page() {
   const verifyUser = async () => {
     const { data, error } = await supabase
       .from("listing")
-      .select("*")
+      .select("* , listingImages(url , listing_id)")
       .eq("createdBy", user?.primaryEmailAddress?.emailAddress)
       .eq("id", params.split("/")[2]);
 
     if (data && data.length > 0) {
+      console.log(data);
       setListing(data[0]);
       setInitialValues({
         type: data[0]?.type || "",
@@ -67,6 +78,7 @@ function page() {
       router.replace("/");
     }
   };
+
 
   const onSubmitHandler = async (formValue) => {
     const { data, error } = await supabase
@@ -87,13 +99,84 @@ function page() {
       .eq("id", params.split("/")[2])
       .select();
 
+      if (error) {
+        console.error("Error updating listing:", error.message);  // Log the error for more details
+        toast("Data not updated: " + error.message);  // Display error message
+      } else {
+        console.log("Data updated:", data);
+        toast("Data updated successfully!");
+      }
+
     if (data) {
       console.log("data updated", data);
       toast("Data Updated Successfully");
-    } else {
-      console.log("data not updated", error);
-      toast("Data Not Updated");
+
+      for( const image of images){
+        const file = image ;
+        const fileName = Date.now().toString();
+        const fileExt = fileName.split('.').pop(); 
+
+
+           // Ensure the file path is a string, if not convert it
+      const filePath = `${fileName}`;  // Ensure it's a string
+
+
+        const { data, error } = await supabase.storage
+        .from('listingImage')
+        .upload(filePath, file, {
+          contentType: `image/${fileExt}`,
+          upsert: false,
+        });
+
+        if (error) {
+          console.log("Error uploading image:", error.message);
+        } else {
+          console.log("File uploaded successfully:", data);
+
+          const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+          .from('listingImage')
+          .createSignedUrl(filePath, 180); // Set the expiration time for the URL (in seconds)
+    
+        if (signedUrlError) {
+          console.log("Error generating signed URL:", signedUrlError.message);
+        } else {
+          // Check the structure of signedUrlData
+          console.log("Signed URL data:", signedUrlData);
+    
+          // Use the `signedUrlData.signedUrl` if it's present
+          if (signedUrlData && signedUrlData.signedUrl) {
+            const signedImageUrl = signedUrlData.signedUrl;
+            console.log("Signed URL:", signedImageUrl);
+          } else {
+            console.log("Signed URL is undefined.");
+          }
+    
+          // You can also construct the regular image URL using your environment variable (if needed)
+          const imageUrl = signedUrlData.signedUrl;
+          console.log(" image ulr ye ",imageUrl);
+          console.log(" image url correction ",signedUrlData);
+         
+          const { data, error } = await supabase
+          .from('listingImages')
+          .insert([
+            {url : imageUrl , listing_id : params.split("/")[2] }
+          ])
+          .select()
+
+          if( data){
+            console.log("data added" , data);
+          }else{
+            console.log('error' , error.message)
+          }
+        
+        }
+      }
+      }
     }
+    // } else {
+    //   console.log("data not updated", error);
+    //   toast("Data Not Updated");
+    // }
   };
 
   if (!listing) {
@@ -307,23 +390,41 @@ function page() {
                   </div>
                 </div>
 
-                <div className="mb-3">
-                  <div className="flex gap-3 justify-end">
-                    <Button
-                      type="submit"
-                      className="bg-blue-500 font-semibold text-white rounded-md shadow-md"
-                    >
-                      Publish
-                    </Button>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-600 my-2">Upload Profile Images</h2>
+                  <FileUpload 
+                  setImages={(values) => setImages(values)}
+                  imageList = {listing.listingImages} />
+                </div>
+
+
+
+                <div className="mb-3  ">
+                  <div className="flex gap-3 justify-end items-center ">
+                 
+
                     <Button
                       type="button"
                       variant="ghost"
-                      className="p-6 rounded-md shadow-md"
+                      className="p-5 rounded-md shadow-md"
                     >
                       Save
                     </Button>
-                  </div>
-                </div>
+               
+
+                    <Button
+                      type = "button"
+                      onSubmit ={onSubmitHandler}
+                      className="bg-blue-500 font-semibold text-white items-center rounded-md shadow-md"
+                    >
+                      Publish & Save
+                    </Button>
+
+</div>
+</div>
+
+
+
               </div>
             </form>
           )}
@@ -333,4 +434,4 @@ function page() {
   );
 }
 
-export default page;
+export default Page;

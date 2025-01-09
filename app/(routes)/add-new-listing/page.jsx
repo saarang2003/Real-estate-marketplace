@@ -10,6 +10,7 @@ function AddNewListing() {
 
 
   return (
+    <div className='flex justify-center items-center mx-auto'>
     <div className="p-10 flex flex-col gap-5 justify-center items-center">
       <h2 className="font-bold text-3xl">Add New Listing</h2>
       <div>
@@ -29,6 +30,7 @@ function AddNewListing() {
       <div className='w-[1100px] border-2 rounded-lg shadow-lg'>
     <MapSearch />
       </div>
+    </div>
     </div>
   );
 }

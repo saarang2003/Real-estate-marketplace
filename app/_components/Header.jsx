@@ -6,20 +6,26 @@ import { Plus } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 
 function Header() {
 
     const path = usePathname();
     const {user ,isSignedIn } = useUser();
+    const [scrolled, setScrolled] = useState(false);
 
     useEffect(() =>{
         console.log(path);
+        const handleScroll = () => setScrolled(window.scrollY > 50);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
     } ,[])
+
+
 
   return (
 
-    <div className='p-6  px-10 flex justify-between shadow-sm fixed top-0 w-full z-10  bg-white'>
+    <div className={`p-6 px-10 flex justify-between shadow-sm fixed top-0 w-full z-10 transition-all duration-300 ${scrolled ? 'h-24' : 'h-32'} bg-white`}>
         <div className='flex gap-12 items-center'>
         <Image 
         src={'/logo.svg'} width={150} height={150} alt='logo image'
