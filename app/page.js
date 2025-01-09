@@ -3,9 +3,9 @@ import ListingMapView from "./_components/ListingMapview";
 export default function Home() {
   return (
     <>
-    <div>
+    <div className="p-10">
 
-    <ListingMapView />    
+    <ListingMapView type={'sell'} />    
     </div>
     </>
   );
