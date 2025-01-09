@@ -3,6 +3,58 @@ import React, { useEffect, useState } from "react";
 import Listing from "./Listing";
 import { supabase } from "@/utils/supabase/client";
 import { toast } from "sonner";
+import Hero from '../../public/hero.webp';
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { PillIcon } from "lucide-react";
+const ZillowLoanCard = () => {
+  return (
+    <div className="max-w-md mx-auto">
+      {/* Main Card */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 mb-4">
+        {/* Logo */}
+        <div className="mb-6 flex gap-2 items-center">
+          <PillIcon className="h-8"/><h2 className="font-semibold text-primary">Calculate Home Loans </h2>
+        </div>
+
+        {/* Top Row */}
+        <div className="grid grid-cols-2 gap-6 mb-6">
+          <div>
+            <div className="text-2xl font-bold mb-1">$ - -</div>
+            <div className="text-sm text-gray-600">Suggested target price</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold mb-1">$ - -</div>
+            <div className="text-sm text-gray-600">BuyAbility℠</div>
+          </div>
+        </div>
+
+        {/* Bottom Row */}
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <div className="text-2xl font-bold mb-1">$ - -</div>
+            <div className="text-sm text-gray-600">Mo. payment</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold mb-1">- - %</div>
+            <div className="text-sm text-gray-600">Today's rate</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold mb-1">- - %</div>
+            <div className="text-sm text-gray-600">APR</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Button */}
+      <button className="w-full bg-primary text-white py-4 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+        Let's get started
+      </button>
+    </div>
+  );
+};
+
+
 
 function ListingMapView({ type }) {
   const [listing, setListing] = useState([]); // Holds the fetched listings
@@ -110,8 +162,25 @@ function ListingMapView({ type }) {
 
         />
       </div>
-      <div>
-        <h2>Map</h2> {/* Placeholder for the Map */}
+      <div className="flex flex-col gap-4 mt-10 items-center">
+        <h2 className="text-2xl text-left font-extrabold">Get home recommendations</h2> {/* Placeholder for the Map */}
+        <h2 className="text-xl text-left font-light text-gray-500">
+  Sign in for a more personalized experience.
+</h2>
+<Button variant = 'outline' className='border-2 border-blue-500 text-blue-500 font-bold'> Sign in </Button>
+        <Image
+        src={Hero}
+        alt="hero image"
+        width={500}
+        height={400}
+        />
+
+        <div className="mt-4 flex flex-col justify-center items-center">
+
+          <h2 className="text-xl  text-left font-extrabold">Find homes you can afford with BuyAbility℠</h2>
+          <h2 className="text-sm text-left mb-4 font-light text-gray-500" >Answer a few questions. We'll highlight homes you're likely to qualify for.</h2>
+      <ZillowLoanCard/>
+        </div>
       </div>
     </div>
   );

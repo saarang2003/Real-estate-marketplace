@@ -2,6 +2,7 @@ import { Bath, BedDouble, MapPin, MapPinIcon, Ruler } from "lucide-react";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import FilterSection from "./FilterSection";
+import Link from "next/link";
 
 function Listing({ listing, handleSearch, setAddress , handleFilterChange }) {
   const [loading, setLoading] = useState(true); // State to manage loading
@@ -74,6 +75,7 @@ function Listing({ listing, handleSearch, setAddress , handleFilterChange }) {
             <div key={index} className="bg-white w-full m-3 shadow-lg rounded-lg">
               {item.listingImages && item.listingImages.length > 0 ? (
                 <div>
+                  <Link href={'view-listing/'+item.id}>
                   <Image
                     src={item.listingImages[0].url}
                     alt={`Listing Image ${index + 1}`}
@@ -99,6 +101,7 @@ function Listing({ listing, handleSearch, setAddress , handleFilterChange }) {
                       </h2>
                     </div>
                   </div>
+                  </Link>
                 </div>
               ) : (
                 <div key={index}>
