@@ -1,13 +1,7 @@
-import { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
+'use client';
 
-// Dynamically import react-leaflet components to avoid SSR issues
-const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then((mod) => mod.Marker), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then((mod) => mod.Popup), { ssr: false });
-const useMap = dynamic(() => import('react-leaflet').then((mod) => mod.useMap), { ssr: false });
-
+import React, { useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -16,13 +10,23 @@ import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
+// Fix marker icon issue with React-Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
 const Search = ({ setPosition }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const map = useMap();
   const provider = new OpenStreetMapProvider();
   const { user } = useUser();
   const router = useRouter();
 
+  // Create a Promise-based wrapper for map.flyTo
   const flyToLocation = (position, zoom) => {
     return new Promise(resolve => {
       map.once('moveend', () => {
@@ -34,15 +38,20 @@ const Search = ({ setPosition }) => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+
     try {
+      // Search for the location using the query
       const results = await provider.search({ query: searchQuery });
+      
       if (results.length > 0) {
         const { x: lng, y: lat } = results[0];
         const newPosition = { lat, lng };
-        console.log('Location coordinates:', newPosition);
-
+        
+        // Update position state
         setPosition(newPosition);
 
+        // Insert the listing into Supabase
         const { data, error } = await supabase
           .from('listing')
           .insert([
@@ -54,21 +63,26 @@ const Search = ({ setPosition }) => {
           ])
           .select();
 
+        if (error) {
+          throw error;
+        }
+
         if (data) {
-          console.log('New data added:', data);
+          // Wait for the map to finish flying to the new location
           await flyToLocation(newPosition, 13);
-          router.replace('/edit-listing/' + data[0].id);
+          
+          // Only navigate after the map has finished moving
           toast("Successfully added new location");
-        } else {
-          console.log('Error:', error);
-          toast("Server side error: " + error.message);
+          router.push('/edit-listing/' + data[0].id);
         }
       } else {
         toast("No results found for the given location.");
       }
     } catch (error) {
-      console.error('Error searching location:', error);
-      toast("Error searching location: " + error.message);
+      console.error('Error:', error);
+      toast("Error: " + error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -81,12 +95,14 @@ const Search = ({ setPosition }) => {
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search location..."
           className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          disabled={isLoading}
         />
         <button 
           type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled={isLoading}
         >
-          Next
+          {isLoading ? 'Loading...' : 'Next'}
         </button>
       </form>
     </div>
@@ -95,19 +111,6 @@ const Search = ({ setPosition }) => {
 
 const MapSearch = () => {
   const [position, setPosition] = useState({ lat: 51.505, lng: -0.09 });
-
-  // Client-side code only (this effect runs after component is mounted)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Fix marker icon issue with React-Leaflet
-      delete L.Icon.Default.prototype._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-      });
-    }
-  }, []); // Empty dependency array ensures this runs once on client-side
 
   return (
     <div className="w-full h-[600px] relative">

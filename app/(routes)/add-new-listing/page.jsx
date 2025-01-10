@@ -52,26 +52,22 @@ const AddNewListing = () => {
   };
 
   return (
+
+
+    <div className=' p-10 flex flex-col gap-5 justify-center items-center'>
+    <h2 className='font-bold text-3xl'>Add New Listing </h2>
     <div>
-      <h1>Add New Listing</h1>
-      <form onSubmit={handleFormSubmit}>
-        <div>
-          <label htmlFor="address">Address:</label>
-          <input 
-            type="text" 
-            id="address" 
-            name="address" 
-            placeholder="Enter address" 
-            required 
-          />
-        </div>
+      <h2 className='text-gray-500'>Enter Address which you want to List</h2>
+    </div>
+
+    <div className='w-[1100px] border-2 rounded-lg shadow-lg'>
+
 
         {/* Dynamically loaded map component */}
         <MapSearch setPosition={setPosition} position={position} />
-
-        <button type="submit">Submit</button>
-      </form>
     </div>
+    </div>
+
   );
 };
 
