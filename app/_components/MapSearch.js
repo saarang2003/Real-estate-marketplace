@@ -1,29 +1,12 @@
-'use client';
-
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 
 // Dynamically import react-leaflet components to avoid SSR issues
-const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-const Marker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
-);
-const Popup = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Popup),
-  { ssr: false }
-);
-const useMap = dynamic(
-  () => import('react-leaflet').then((mod) => mod.useMap),
-  { ssr: false }
-);
+const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then((mod) => mod.Marker), { ssr: false });
+const Popup = dynamic(() => import('react-leaflet').then((mod) => mod.Popup), { ssr: false });
+const useMap = dynamic(() => import('react-leaflet').then((mod) => mod.useMap), { ssr: false });
 
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet/dist/leaflet.css';
@@ -33,17 +16,6 @@ import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
-// Fix marker icon issue with React-Leaflet
-if (typeof window !== 'undefined') {
-  delete L.Icon.Default.prototype._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  });
-}
-
-// Search component that will update map position
 const Search = ({ setPosition }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const map = useMap();
@@ -123,6 +95,19 @@ const Search = ({ setPosition }) => {
 
 const MapSearch = () => {
   const [position, setPosition] = useState({ lat: 51.505, lng: -0.09 });
+
+  // Client-side code only (this effect runs after component is mounted)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Fix marker icon issue with React-Leaflet
+      delete L.Icon.Default.prototype._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+      });
+    }
+  }, []); // Empty dependency array ensures this runs once on client-side
 
   return (
     <div className="w-full h-[600px] relative">
