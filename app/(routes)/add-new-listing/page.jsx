@@ -10,8 +10,9 @@ import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
-// Dynamically import the MapContainer component with ssr: false to avoid SSR errors
+
 const MapSearch = dynamic(() => import('@/components/MapSearch'), { ssr: false });
+
 
 // Fix marker icon issue with React-Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
