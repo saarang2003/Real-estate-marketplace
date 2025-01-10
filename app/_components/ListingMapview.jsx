@@ -152,14 +152,13 @@ function ListingMapView({ type }) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-2 border-red-500">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
       <div>
         <Listing
         listing={listing} 
         handleSearch={handleSearch} 
         setAddress={setAddress}
         handleFilterChange={handleFilterChange}
-
         />
       </div>
       <div className="flex flex-col gap-4 mt-10 items-center">

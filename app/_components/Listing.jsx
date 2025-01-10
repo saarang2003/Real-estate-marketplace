@@ -1,81 +1,95 @@
-import { Bath, BedDouble, MapPin, MapPinIcon, Ruler } from "lucide-react";
-import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import FilterSection from "./FilterSection";
+import { MapPinIcon } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
-function Listing({ listing, handleSearch, setAddress , handleFilterChange }) {
-  const [loading, setLoading] = useState(true); // State to manage loading
-  const [data, setData] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(""); // State to hold the search term
 
-  // Simulate fetching data (replace with real API call)
+function Listing({ listing }) {
+  const [data, setData] = useState(listing);
+  const [filteredData, setFilteredData] = useState(listing);
+  const [filters, setFilters] = useState({
+    priceRange: [0, 1000000],
+    bedrooms: 'all',
+    bathrooms: 'all',
+    parking: 'all',
+    propertyType: 'all',
+  });
+
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setData(listing); // Assuming listing is passed as a prop or fetched
-      setLoading(false);
-    }, 2000); // Simulating a 2-second delay to fetch data
+    // Debug log to check initial data
+    console.log('Initial data length:', listing?.length);
+    console.log('Initial data:', listing);
+    setData(listing);
   }, [listing]);
 
-  const handleInputChange = (e) => {
-    setSearchTerm(e.target.value);
+  useEffect(() => {
+    const filtered = filterListings(data);
+    console.log('Filtered data length:', filtered?.length);
+    setFilteredData(filtered);
+  }, [filters, data]);
+
+  const handleFilterChange = (newFilters) => {
+    console.log('New filters:', newFilters);
+    setFilters(newFilters);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    handleSearch(searchTerm);
+  const filterListings = (listings) => {
+    if (!listings) return [];
+    
+    return listings.filter((listing) => {
+      // Debug log for each listing being filtered
+      console.log('Processing listing:', listing);
+
+      const price = Number(listing.price);
+      const bedroom = Number(listing.bedroom);
+      const bathroom = Number(listing.bathroom);
+      const parking = Number(listing.parking);
+      const type = listing.propertyType?.toLowerCase();
+
+      // Log the actual values being compared
+      console.log(`Comparing - Price: ${price}, Bedrooms: ${bedroom}, Bathrooms: ${bathroom}, Parking: ${parking}, Type: ${type}`);
+      console.log(`Against filters:`, filters);
+
+      const priceValid = price >= filters.priceRange[0] && price <= filters.priceRange[1];
+      const bedroomsValid = filters.bedrooms === 'all' || bedroom === Number(filters.bedrooms);
+      const bathroomsValid = filters.bathrooms === 'all' || bathroom === Number(filters.bathrooms);
+      const parkingValid = filters.parking === 'all' || parking === Number(filters.parking);
+      const typeValid = filters.propertyType === 'all' || type === filters.propertyType.toLowerCase();
+
+      // Log which conditions passed/failed
+      console.log('Filter results:', {
+        priceValid,
+        bedroomsValid,
+        bathroomsValid,
+        parkingValid,
+        typeValid
+      });
+
+      return priceValid && bedroomsValid && bathroomsValid && parkingValid && typeValid;
+    });
   };
 
-  // Filter the listings based on the search term
-  const filteredData = data.filter((item) =>
-    item.address.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  
+  
 
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-6">Listing Component</h1>
-      <form
-        className="flex px-2 items-center gap-2"
-        onSubmit={handleSubmit}
-      >
-        <label htmlFor="address" className="flex items-center">
-          <MapPin width={30} height={30} />
-        </label>
-        <input
-          type="text"
-          placeholder="Enter your location"
-          className="w-[500px] border-2 border-gray-300 rounded-lg shadow-sm p-2 px-2"
-          value={searchTerm}
-          onChange={handleInputChange}
-        />
-        <button
-          type="submit"
-          className="bg-blue-500 text-white rounded-lg shadow-lg font-semibold p-2"
-        >
-          Search
-        </button>
-      </form>
 
-      <div className="mt-4 px-4">
+      {/* Filter Section */}
       <FilterSection onFilterChange={handleFilterChange} />
-      </div>
 
-      <div>
-        <h2 className="text-xl font-semibold px-4 mt-3">Found <span className="text-primary">{filteredData.length} results</span></h2>
-      </div>
+      <h2 className="text-xl font-semibold mt-3">Found {filteredData.length} results</h2>
 
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {loading ? (
-          <div>Loading...</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+        {filteredData.length === 0 ? (
+          <div>No listings found</div> // Show message if no listings match filters
         ) : (
-          // Render real content once data is fetched
           filteredData.map((item, index) => (
             <div key={index} className="bg-white w-full m-3 shadow-lg rounded-lg">
               {item.listingImages && item.listingImages.length > 0 ? (
-                <div>
-                  <Link href={'view-listing/'+item.id}>
+                <Link href={'/view-listing/' + item.id}>
                   <Image
                     src={item.listingImages[0].url}
                     alt={`Listing Image ${index + 1}`}
@@ -91,18 +105,17 @@ function Listing({ listing, handleSearch, setAddress , handleFilterChange }) {
                     </h2>
                     <div className="flex gap-2 mt-2">
                       <h2 className="flex gap-2 text-sm w-1/3 bg-slate-200 justify-center rounded-md items-center p-2">
-                        <BedDouble /> {item.bedroom}
+                        {item.bedroom} Bed
                       </h2>
                       <h2 className="flex gap-2 text-sm w-1/3 bg-slate-200 justify-center rounded-md items-center p-2">
-                        <Bath /> {item.bathroom}
+                        {item.bathroom} Bath
                       </h2>
                       <h2 className="flex gap-2 text-sm w-1/3 bg-slate-200 justify-center rounded-md items-center p-2">
-                        <Ruler /> {item.builtIn}
+                        {item.parking} Parking
                       </h2>
                     </div>
                   </div>
-                  </Link>
-                </div>
+                </Link>
               ) : (
                 <div key={index}>
                   <p>No image available for this listing.</p>

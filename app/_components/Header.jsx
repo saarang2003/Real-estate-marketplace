@@ -35,7 +35,9 @@ function Header() {
          <Link href={'/'} >  <li className={`'hover:text-primary font-medium text-sm cursor-pointer ' ${ path == '/' && 'text-primary'}`}>For Sell </li>
          </Link> 
             <li className='hover:text-primary font-medium text-sm cursor-pointer ' > For Agent</li>
-            <li className='hover:text-primary font-medium text-sm cursor-pointer ' >Agent Finder </li>
+           <Link href={'/add-new-listing'}>
+            <li className='hover:text-primary font-medium text-sm cursor-pointer ' >List Your Property </li>
+           </Link>
         </ul>
         </div>
         <div className="flex items-center gap-5">

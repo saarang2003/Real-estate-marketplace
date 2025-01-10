@@ -10,13 +10,14 @@ import {
 import Image from 'next/image';
 
 function Slider({ imageList }) {
-    console.log(imageList);
+    console.log("Image listing page ", imageList);
   return (
     imageList && imageList.length > 0 ? (
       <Carousel>
         <CarouselContent>
           {imageList.map((item, index) => {
             return (
+              <div className='mx-auto w-1200'>
               <CarouselItem key={index}>
                 <Image 
                   src={item.url} 
@@ -26,11 +27,12 @@ function Slider({ imageList }) {
                   className='rounded-xl object-cover h-[300px]'
                 />
               </CarouselItem>
+              </div>
             );
           })}
         </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
+        <CarouselPrevious  className = 'bg-primary text-white'/>
+        <CarouselNext className = 'bg-primary text-white' />
       </Carousel>
     ) : (
       <div className='w-full h-[200px] bg-slate-200'>

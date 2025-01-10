@@ -135,7 +135,7 @@ const router = useRouter();
 
           const { data: signedUrlData, error: signedUrlError } = await supabase.storage
           .from('listingImage')
-          .createSignedUrl(filePath, 36000); // Set the expiration time for the URL (in seconds)
+          .createSignedUrl(filePath, 360000000000000); // Set the expiration time for the URL (in seconds)
     
         if (signedUrlError) {
           console.log("Error generating signed URL:", signedUrlError.message);
