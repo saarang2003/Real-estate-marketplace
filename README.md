@@ -24,7 +24,7 @@ bun dev
 
 #### Feature implemented 
 
-1) Sign in / Sing up Authenticatiion
+1) Clerk Sign in / Sing up Authenticatiion
 2) Sucure routing
 3) React leaflet Map integration
 4) Live location real time listing property funtionality
